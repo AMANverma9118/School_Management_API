@@ -61,9 +61,40 @@ const schoolController = {
         }
     },
 
-    // List Short School listController 
+    // Controller for list of Short School
     listShortSchools: async (req, res) => {
-        
+        try {
+            const { latitude, longitude } = req.query;
+
+            
+            if (!latitude || !longitude) {
+                return res.status(400).json({ message: 'Latitude and longitude are required' });
+            }
+
+            const lat = parseFloat(latitude);
+            const lon = parseFloat(longitude);
+
+            if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+                return res.status(400).json({ message: 'Invalid coordinates' });
+            }
+
+            
+            const [schools] = await db.execute('SELECT * FROM schools');
+
+            
+            const schoolsWithDistance = schools.map(school => ({
+                ...school,
+                distance: calculateDistance(lat, lon, school.latitude, school.longitude)
+            }));
+
+            
+            schoolsWithDistance.sort((a, b) => a.distance - b.distance);
+
+            res.json(schoolsWithDistance);
+        } catch (error) {
+            console.error('Error fetching schools:', error);
+            res.status(500).json({ message: 'Error fetching schools' });
+        }
     }
 };
 
