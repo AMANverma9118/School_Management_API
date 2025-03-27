@@ -12,10 +12,6 @@ app.use(express.json());
 app.use("/", schoolRoutes);
 
 
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok', message: 'Server is running' });
-});
-
 app.use((err, req, res, next) => {
     console.error('Error:', err);
     res.status(500).json({
