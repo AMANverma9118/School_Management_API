@@ -3,7 +3,7 @@ const db = require('../config/db');
 
 // Calculate distance between two points using Haversine formula
 function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Earth's radius in kilometers
+    const R = 6371; 
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = 
@@ -14,7 +14,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
-// Validation middleware for add school
+
 const validateAddSchool = [
     body('name').notEmpty().trim().withMessage('School name is required'),
     body('address').notEmpty().trim().withMessage('Address is required'),
@@ -22,7 +22,6 @@ const validateAddSchool = [
     body('longitude').isFloat({ min: -180, max: 180 }).withMessage('Invalid longitude')
 ];
 
-// Controller functions
 const schoolController = {
     // Add School Controller
     addSchool: async (req, res) => {
@@ -34,7 +33,6 @@ const schoolController = {
 
             const { name, address, latitude, longitude } = req.body;
             
-            // Check for duplicate school name
             const existingSchools = await db.query(
                 'SELECT id FROM schools WHERE name = $1 AND deleted = false',
                 [name]
@@ -47,7 +45,6 @@ const schoolController = {
                 });
             }
             
-            // If no duplicate found, insert the new school
             const result = await db.query(
                 'INSERT INTO schools (name, address, latitude, longitude) VALUES ($1, $2, $3, $4) RETURNING id',
                 [name, address, latitude, longitude]
@@ -84,7 +81,6 @@ const schoolController = {
         try {
             const { latitude, longitude } = req.query;
 
-            // Validate coordinates
             if (!latitude || !longitude) {
                 return res.status(400).json({ message: 'Latitude and longitude are required' });
             }
@@ -96,17 +92,14 @@ const schoolController = {
                 return res.status(400).json({ message: 'Invalid coordinates' });
             }
 
-            // Fetch all schools
             const result = await db.query('SELECT * FROM schools WHERE deleted = false');
             const schools = result.rows;
 
-            // Calculate distances and sort schools
             const schoolsWithDistance = schools.map(school => ({
                 ...school,
                 distance: calculateDistance(lat, lon, school.latitude, school.longitude)
             }));
 
-            // Sort by distance
             schoolsWithDistance.sort((a, b) => a.distance - b.distance);
 
             res.json(schoolsWithDistance);

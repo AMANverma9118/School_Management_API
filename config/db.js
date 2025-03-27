@@ -1,24 +1,21 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// Validate environment variables
 if (!process.env.DATABASE_URL) {
     console.error('DATABASE_URL is not defined in environment variables');
     process.exit(1);
 }
 
-// Create connection pool with proper configuration
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
         rejectUnauthorized: false
     },
-    max: 20, // Maximum number of clients in the pool
-    idleTimeoutMillis: 30000, // How long a client is allowed to remain idle before being closed
-    connectionTimeoutMillis: 10000, // Increased timeout to 10 seconds
+    max: 20, 
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000, 
 });
 
-// Function to test connection with retries
 const testConnection = async (retries = 3, delay = 2000) => {
     for (let i = 0; i < retries; i++) {
         try {
@@ -42,7 +39,6 @@ const testConnection = async (retries = 3, delay = 2000) => {
     return false;
 };
 
-// Test the connection
 testConnection().then(success => {
     if (!success) {
         console.error('Failed to connect to database after multiple attempts');
@@ -50,10 +46,8 @@ testConnection().then(success => {
     }
 });
 
-// Handle pool errors
 pool.on('error', (err) => {
     console.error('Unexpected error on idle client', err);
-    // Don't exit the process on pool errors, just log them
     console.error('Pool error details:', {
         message: err.message,
         stack: err.stack

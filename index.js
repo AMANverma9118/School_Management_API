@@ -29,6 +29,10 @@ app.use((req, res) => {
     res.status(404).json({ message: "Route not found" });
 });
 
+app.get('/',(req,res)=>{
+    res.send('Hello everyone');
+})
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

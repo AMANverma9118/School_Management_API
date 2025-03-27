@@ -8,4 +8,3 @@ router.get("/listShortSchool", schoolController.listShortSchool);
 
 module.exports = router;
 
-//Hello
