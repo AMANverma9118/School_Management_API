@@ -1,7 +1,11 @@
 CREATE DATABASE IF NOT EXISTS school_management;
 USE school_management;
 
-CREATE TABLE IF NOT EXISTS schools (
+-- Drop the table if it exists to ensure clean creation
+DROP TABLE IF EXISTS schools;
+
+-- Create the schools table
+CREATE TABLE schools (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     address VARCHAR(255) NOT NULL,
@@ -11,4 +15,5 @@ CREATE TABLE IF NOT EXISTS schools (
     deleted BOOLEAN DEFAULT FALSE
 );
 
-CREATE INDEX IF NOT EXISTS idx_schools_name_deleted ON schools(name, deleted); 
+-- Create index for faster queries
+CREATE INDEX idx_schools_name_deleted ON schools(name, deleted); 
