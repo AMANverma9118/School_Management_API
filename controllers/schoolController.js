@@ -35,12 +35,12 @@ const schoolController = {
             const { name, address, latitude, longitude } = req.body;
             
             // Check for duplicate school name
-            const [existingSchools] = await db.execute(
-                'SELECT id FROM schools WHERE name = ?',
+            const existingSchools = await db.query(
+                'SELECT id FROM schools WHERE name = $1 AND deleted = false',
                 [name]
             );
 
-            if (existingSchools.length > 0) {
+            if (existingSchools.rows.length > 0) {
                 return res.status(400).json({
                     message: 'A school with this name already exists',
                     error: 'DUPLICATE_SCHOOL_NAME'
@@ -48,22 +48,22 @@ const schoolController = {
             }
             
             // If no duplicate found, insert the new school
-            const [result] = await db.execute(
-                'INSERT INTO schools (name, address, latitude, longitude) VALUES (?, ?, ?, ?)',
+            const result = await db.query(
+                'INSERT INTO schools (name, address, latitude, longitude) VALUES ($1, $2, $3, $4) RETURNING id',
                 [name, address, latitude, longitude]
             );
 
             res.status(201).json({
                 message: 'School added successfully',
-                schoolId: result.insertId
+                schoolId: result.rows[0].id
             });
         } catch (error) {
             console.error('Error adding school:', error);
             console.error('Error details:', {
                 code: error.code,
-                errno: error.errno,
-                sqlState: error.sqlState,
-                sqlMessage: error.sqlMessage
+                detail: error.detail,
+                hint: error.hint,
+                where: error.where
             });
             
             res.status(500).json({
@@ -71,9 +71,9 @@ const schoolController = {
                 error: process.env.NODE_ENV === 'development' ? error.message : undefined,
                 details: process.env.NODE_ENV === 'development' ? {
                     code: error.code,
-                    errno: error.errno,
-                    sqlState: error.sqlState,
-                    sqlMessage: error.sqlMessage
+                    detail: error.detail,
+                    hint: error.hint,
+                    where: error.where
                 } : undefined
             });
         }
@@ -97,7 +97,8 @@ const schoolController = {
             }
 
             // Fetch all schools
-            const [schools] = await db.execute('SELECT * FROM schools');
+            const result = await db.query('SELECT * FROM schools WHERE deleted = false');
+            const schools = result.rows;
 
             // Calculate distances and sort schools
             const schoolsWithDistance = schools.map(school => ({
@@ -113,9 +114,9 @@ const schoolController = {
             console.error('Error fetching schools:', error);
             console.error('Error details:', {
                 code: error.code,
-                errno: error.errno,
-                sqlState: error.sqlState,
-                sqlMessage: error.sqlMessage
+                detail: error.detail,
+                hint: error.hint,
+                where: error.where
             });
             
             res.status(500).json({
@@ -123,9 +124,9 @@ const schoolController = {
                 error: process.env.NODE_ENV === 'development' ? error.message : undefined,
                 details: process.env.NODE_ENV === 'development' ? {
                     code: error.code,
-                    errno: error.errno,
-                    sqlState: error.sqlState,
-                    sqlMessage: error.sqlMessage
+                    detail: error.detail,
+                    hint: error.hint,
+                    where: error.where
                 } : undefined
             });
         }
