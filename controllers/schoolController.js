@@ -24,16 +24,50 @@ const validateAddSchool = [
 const schoolController = {
     //Controller for addSchool API
     addSchool: async (req, res) => {
-       
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ errors: errors.array() });
+            }
+
+            const { name, address, latitude, longitude } = req.body;
+            
+            
+            const [existingSchools] = await db.execute(
+                'SELECT id FROM schools WHERE name = ?',
+                [name]
+            );
+
+            if (existingSchools.length > 0) {
+                return res.status(400).json({
+                    message: 'A school with this name already exists',
+                    error: 'DUPLICATE_SCHOOL_NAME'
+                });
+            }
+            
+            
+            const [result] = await db.execute(
+                'INSERT INTO schools (name, address, latitude, longitude) VALUES (?, ?, ?, ?)',
+                [name, address, latitude, longitude]
+            );
+
+            res.status(201).json({
+                message: 'School added successfully',
+                schoolId: result.insertId
+            });
+        } catch (error) {
+            console.error('Error adding school:', error);
+            res.status(500).json({ message: 'Error adding school' });
+        }
     },
 
     // List Short School listController 
     listShortSchools: async (req, res) => {
-       
+        
     }
 };
 
 module.exports = {
     schoolController,
     validateAddSchool
-}; 
+};
