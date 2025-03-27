@@ -3,7 +3,7 @@ const db = require('../config/db');
 
 // Calculate distance between two points using Haversine formula
 function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; 
+    const R = 6371; // Earth's radius in kilometers
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = 
@@ -14,6 +14,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
+// Validation middleware for add school
 const validateAddSchool = [
     body('name').notEmpty().trim().withMessage('School name is required'),
     body('address').notEmpty().trim().withMessage('Address is required'),
@@ -21,8 +22,9 @@ const validateAddSchool = [
     body('longitude').isFloat({ min: -180, max: 180 }).withMessage('Invalid longitude')
 ];
 
+// Controller functions
 const schoolController = {
-    //Controller for addSchool API
+    // Add School Controller
     addSchool: async (req, res) => {
         try {
             const errors = validationResult(req);
@@ -32,7 +34,7 @@ const schoolController = {
 
             const { name, address, latitude, longitude } = req.body;
             
-            
+            // Check for duplicate school name
             const [existingSchools] = await db.execute(
                 'SELECT id FROM schools WHERE name = ?',
                 [name]
@@ -45,7 +47,7 @@ const schoolController = {
                 });
             }
             
-            
+            // If no duplicate found, insert the new school
             const [result] = await db.execute(
                 'INSERT INTO schools (name, address, latitude, longitude) VALUES (?, ?, ?, ?)',
                 [name, address, latitude, longitude]
@@ -57,16 +59,32 @@ const schoolController = {
             });
         } catch (error) {
             console.error('Error adding school:', error);
-            res.status(500).json({ message: 'Error adding school' });
+            console.error('Error details:', {
+                code: error.code,
+                errno: error.errno,
+                sqlState: error.sqlState,
+                sqlMessage: error.sqlMessage
+            });
+            
+            res.status(500).json({
+                message: 'Error adding school',
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+                details: process.env.NODE_ENV === 'development' ? {
+                    code: error.code,
+                    errno: error.errno,
+                    sqlState: error.sqlState,
+                    sqlMessage: error.sqlMessage
+                } : undefined
+            });
         }
     },
 
-    // Controller for list of Short School
-    listShortSchools: async (req, res) => {
+    // List Short School Controller
+    listShortSchool: async (req, res) => {
         try {
             const { latitude, longitude } = req.query;
 
-            
+            // Validate coordinates
             if (!latitude || !longitude) {
                 return res.status(400).json({ message: 'Latitude and longitude are required' });
             }
@@ -78,22 +96,38 @@ const schoolController = {
                 return res.status(400).json({ message: 'Invalid coordinates' });
             }
 
-            
+            // Fetch all schools
             const [schools] = await db.execute('SELECT * FROM schools');
 
-            
+            // Calculate distances and sort schools
             const schoolsWithDistance = schools.map(school => ({
                 ...school,
                 distance: calculateDistance(lat, lon, school.latitude, school.longitude)
             }));
 
-            
+            // Sort by distance
             schoolsWithDistance.sort((a, b) => a.distance - b.distance);
 
             res.json(schoolsWithDistance);
         } catch (error) {
             console.error('Error fetching schools:', error);
-            res.status(500).json({ message: 'Error fetching schools' });
+            console.error('Error details:', {
+                code: error.code,
+                errno: error.errno,
+                sqlState: error.sqlState,
+                sqlMessage: error.sqlMessage
+            });
+            
+            res.status(500).json({
+                message: 'Error fetching schools',
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+                details: process.env.NODE_ENV === 'development' ? {
+                    code: error.code,
+                    errno: error.errno,
+                    sqlState: error.sqlState,
+                    sqlMessage: error.sqlMessage
+                } : undefined
+            });
         }
     }
 };
