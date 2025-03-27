@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: school-management-api
+    env: node
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_HOST
+        value: your-mysql-host
+      - key: DB_USER
+        value: your-mysql-user
+      - key: DB_PASSWORD
+        value: your-mysql-password
+      - key: DB_NAME
+        value: your-database-name
+      - key: DB_PORT
+        value: 3306 
