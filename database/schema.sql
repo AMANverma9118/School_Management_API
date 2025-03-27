@@ -9,4 +9,6 @@ CREATE TABLE IF NOT EXISTS schools (
     longitude FLOAT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted BOOLEAN DEFAULT FALSE
-); 
+);
+
+CREATE INDEX IF NOT EXISTS idx_schools_name_deleted ON schools(name, deleted); 
